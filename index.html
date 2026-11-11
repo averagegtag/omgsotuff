@@ -64,7 +64,7 @@ footer{max-width:1200px;margin:0 auto;padding:0 18px 25px;color:var(--muted);fon
 const $=id=>document.getElementById(id);
 let image=null, raf=0, recorder=null, chunks=[], stream=null, settings={endpoint:"",key:"",model:"agnes-ai-2.5-flash",auth:"bearer",body:""};
 function setStatus(s){$("status").textContent=s}
-function applySettings(){settings={endpoint:$("endpoint").value.trim(),key:$("apikey").value,model:$("model").value.trim(),auth:$("authmode").value,body:$("bodytemplate").value};}
+function applySettings(){settings={endpoint:$("endpoint").value.trim(),key:$("apikey").value.trim(),model:$("model").value.trim(),auth:$("authmode").value,body:$("bodytemplate").value};}
 $("saveSettings").onclick=()=>{applySettings();setStatus("Settings applied for this session.");};
 $("clearKey").onclick=()=>{$("apikey").value="";applySettings();setStatus("API key cleared from this page.");};
 $("settingsJump").onclick=()=>{$("settings").open=true;$("settings").scrollIntoView({behavior:"smooth",block:"center"});};
@@ -86,8 +86,11 @@ $("generate").onclick=async()=>{
  $("generate").disabled=true;setStatus("Generating image…");
  try{
  const headers={"Content-Type":"application/json"};
- if(settings.auth==="bearer")headers.Authorization="Bearer "+settings.key;
- if(settings.auth==="xkey")headers["x-api-key"]=settings.key;
+ // Fetch header values must be Latin-1. API keys are expected to be ASCII.
+ const headerKey=settings.key.trim();
+ if(/[\\u0100-\\uFFFF]/.test(headerKey)){throw new Error("Your API key contains unsupported non-ASCII characters. Re-copy the key from Agnes AI and paste it directly into the API key field (no quotes or extra text).");}
+ if(settings.auth==="bearer")headers.Authorization="Bearer "+headerKey;
+ if(settings.auth==="xkey")headers["x-api-key"]=headerKey;
  const response=await fetch(settings.endpoint,{method:"POST",headers,body:JSON.stringify(body)});
  const raw=await response.text();let data;try{data=JSON.parse(raw)}catch{throw new Error("API returned non-JSON (HTTP "+response.status+").")}
  if(!response.ok)throw new Error(data.error?.message||data.message||"HTTP "+response.status);
