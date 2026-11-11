@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agnes AI Video Studio</title>
+<style>
+:root{--bg:#0b0d12;--panel:#141821;--panel2:#1b2130;--line:#2a3243;--text:#edf1fa;--muted:#9ba7bd;--accent:#8b5cf6;--accent2:#38bdf8}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1b1830 0,#0b0d12 50%);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:22px clamp(16px,4vw,42px);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ffffff12;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:19px}.logo{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));font-weight:900}
+button,select,input,textarea{font:inherit;color:inherit}button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);border-radius:11px;padding:10px 14px;font-weight:650}button:hover{filter:brightness(1.15)}button:disabled{opacity:.45;cursor:not-allowed}.primary{border:0;background:linear-gradient(100deg,#7c3aed,#2563eb)}.danger{color:#ffb4b4}
+main{max-width:1200px;margin:0 auto;padding:26px 18px;display:grid;grid-template-columns:minmax(280px,390px) minmax(0,1fr);gap:20px}
+.panel{background:linear-gradient(180deg,#151a24f2,#11151df2);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 12px 40px #0002}.panel h2{font-size:16px;margin:0 0 15px}.field{display:grid;gap:7px;margin-bottom:15px}.field label{font-size:12px;color:var(--muted);font-weight:750;letter-spacing:.06em;text-transform:uppercase}input,textarea,select{width:100%;background:#0d1119;border:1px solid var(--line);border-radius:10px;padding:11px;outline:none}textarea{min-height:115px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.hint{font-size:12px;color:var(--muted)}.buttons{display:flex;gap:9px;flex-wrap:wrap}.status{margin-top:12px;color:var(--muted);font-size:13px;min-height:20px}
+.preview{display:flex;flex-direction:column;min-height:540px}.stage{background:#080a0e;border:1px solid var(--line);border-radius:14px;overflow:hidden;display:grid;place-items:center;flex:1;min-height:320px;position:relative}.stage canvas{max-width:100%;max-height:100%;width:auto;height:auto;display:block}.empty{text-align:center;padding:30px;color:var(--muted)}.empty .symbol{font-size:50px;margin-bottom:12px}.previewbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}.tag{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:5px 9px;color:var(--muted)}
+details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summary{cursor:pointer;font-weight:700;font-size:13px}.settingsbody{padding-top:12px}.smallbtn{padding:7px 10px;font-size:12px}
+footer{max-width:1200px;margin:0 auto;padding:0 18px 25px;color:var(--muted);font-size:12px}
+@media(max-width:850px){main{grid-template-columns:1fr}.preview{min-height:430px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="logo">A</div><div>Agnes AI <span style="color:#a78bfa">Video Studio</span><div class="hint">Image-powered motion studio</div></div></div><button id="settingsJump">⚙ API settings</button></header>
+<main>
+<section class="panel">
+<h2>✦ Create a video</h2>
+<div class="field"><label for="prompt">Scene prompt</label><textarea id="prompt" placeholder="A tiny astronaut exploring a glowing alien garden, cinematic lighting..."></textarea></div>
+<div class="field"><label for="motion">Motion style</label><select id="motion"><option value="zoom">Slow cinematic zoom</option><option value="panleft">Pan left</option><option value="panright">Pan right</option><option value="drift">Gentle floating drift</option><option value="pulse">Subtle cinematic pulse</option></select></div>
+<div class="row">
+<div class="field"><label for="duration">Duration</label><select id="duration"><option value="4">4 seconds</option><option value="6" selected>6 seconds</option><option value="8">8 seconds</option><option value="10">10 seconds</option></select></div>
+<div class="field"><label for="ratio">Aspect ratio</label><select id="ratio"><option value="16:9">16:9 Landscape</option><option value="9:16">9:16 Portrait</option><option value="1:1">1:1 Square</option></select></div>
+</div>
+<div class="field"><label for="size">Image size</label><select id="size"><option value="1K">1K</option><option value="2K">2K</option><option value="3K">3K</option><option value="4K">4K</option></select><div class="hint">Agnes supports 1K, 2K, 3K, and 4K tiers. Canvas aspect ratio is set separately.</div></div>
+<div class="buttons"><button class="primary" id="generate">✦ Generate image</button><button id="animate" disabled>▶ Animate preview</button></div>
+<div class="buttons" style="margin-top:9px"><button id="export" disabled>⬇ Export video (WebM)</button><button id="stop" disabled>■ Stop</button></div>
+<div class="status" id="status">Add your API details in settings to get started.</div>
+<details id="settings"><summary>⚙ API settings</summary><div class="settingsbody">
+<div class="field"><label for="endpoint">Image API endpoint</label><input id="endpoint" value="https://apihub.agnes-ai.com/v1/images/generations" placeholder="https://apihub.agnes-ai.com/v1/images/generations"><div class="hint">Use the provider's image-generation endpoint. Browser access (CORS) must be allowed.</div></div>
+<div class="field"><label for="apikey">API key</label><input id="apikey" type="password" autocomplete="off" placeholder="Paste API key here"><div class="hint">Stored only in this page's memory while it is open. Avoid using secret keys in public websites.</div></div>
+<div class="row">
+<div class="field"><label for="model">Model name</label><input id="model" value="agnes-image-2.5-flash"></div>
+<div class="field"><label for="authmode">Authorization</label><select id="authmode"><option value="bearer">Bearer token</option><option value="xkey">x-api-key header</option><option value="none">No auth header</option></select></div>
+</div>
+<div class="field"><label for="bodytemplate">JSON request body template</label><textarea id="bodytemplate" style="min-height:145px">{
+  "model": "{{model}}",
+  "prompt": "{{prompt}}",
+  "size": "1K",
+  "ratio": "{{ratio}}",
+  "extra_body": {
+    "response_format": "url"
+  }
+}</textarea><div class="hint">Template variables: {{model}}, {{prompt}}, {{size}}, {{ratio}}. Adjust this to match Agnes's documented API schema.</div></div>
+<div class="buttons"><button id="saveSettings" class="primary">Apply settings</button><button id="clearKey" class="smallbtn danger">Clear API key</button></div>
+<div class="hint" style="margin-top:10px">This is a configurable API client, not an official Agnes product. API paths, model identifier, request fields, and image response format may differ.</div>
+</div></details>
+</section>
+<section class="panel preview">
+<h2>▣ Preview</h2>
+<div class="stage" id="stage"><div class="empty" id="empty"><div class="symbol">▧</div><strong>Your generated scene appears here</strong><div class="hint">Generate an image, then animate it.</div></div><canvas id="canvas" hidden></canvas></div>
+<div class="previewbar"><span class="tag" id="videoInfo">No scene loaded</span><span class="tag">Motion is image-based</span></div>
+</section>
+</main>
+<footer>Free animation and browser export. This creates motion effects from a still image; it does not synthesize new character actions like a dedicated AI video model. Video exports as WebM because MP4 encoding is not consistently built into browsers.</footer>
+<script>
+const $=id=>document.getElementById(id);
+let image=null, raf=0, recorder=null, chunks=[], stream=null, settings={endpoint:"",key:"",model:"agnes-ai-2.5-flash",auth:"bearer",body:""};
+function setStatus(s){$("status").textContent=s}
+function applySettings(){settings={endpoint:$("endpoint").value.trim(),key:$("apikey").value,model:$("model").value.trim(),auth:$("authmode").value,body:$("bodytemplate").value};}
+$("saveSettings").onclick=()=>{applySettings();setStatus("Settings applied for this session.");};
+$("clearKey").onclick=()=>{$("apikey").value="";applySettings();setStatus("API key cleared from this page.");};
+$("settingsJump").onclick=()=>{$("settings").open=true;$("settings").scrollIntoView({behavior:"smooth",block:"center"});};
+function escapeTemplate(s){return s.replaceAll("\\","\\\\").replaceAll('"','\\"').replaceAll("\n","\\n").replaceAll("\r","");}
+function makeBody(){let t=settings.body.replaceAll("{{model}}",escapeTemplate(settings.model)).replaceAll("{{prompt}}",escapeTemplate($("prompt").value.trim())).replaceAll("{{size}}",escapeTemplate($("size").value)).replaceAll("{{ratio}}",escapeTemplate($("ratio").value));return JSON.parse(t);}
+function extractImage(data){
+ if(data?.data?.[0]?.b64_json)return "data:image/png;base64,"+data.data[0].b64_json;
+ if(data?.data?.[0]?.url)return data.data[0].url;
+ if(data?.image_url)return data.image_url;
+ if(data?.url)return data.url;
+ if(data?.image_base64)return "data:image/png;base64,"+data.image_base64;
+ throw new Error("Could not find image in response. Check the API response format and request template.");
+}
+$("generate").onclick=async()=>{
+ applySettings();
+ if(!settings.endpoint||!settings.key){$("settings").open=true;setStatus("Enter your image API endpoint and key in settings.");return;}
+ if(!$("prompt").value.trim()){setStatus("Write a scene prompt first.");return;}
+ let body;try{body=makeBody()}catch(e){setStatus("Request template isn't valid JSON: "+e.message);return;}
+ $("generate").disabled=true;setStatus("Generating image…");
+ try{
+ const headers={"Content-Type":"application/json"};
+ if(settings.auth==="bearer")headers.Authorization="Bearer "+settings.key;
+ if(settings.auth==="xkey")headers["x-api-key"]=settings.key;
+ const response=await fetch(settings.endpoint,{method:"POST",headers,body:JSON.stringify(body)});
+ const raw=await response.text();let data;try{data=JSON.parse(raw)}catch{throw new Error("API returned non-JSON (HTTP "+response.status+").")}
+ if(!response.ok)throw new Error(data.error?.message||data.message||"HTTP "+response.status);
+ const src=extractImage(data);const img=new Image();img.crossOrigin="anonymous";
+ await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error("Image failed to load. The URL may block browser access."));img.src=src;});
+ image=img;$("empty").hidden=true;$("canvas").hidden=false;$("animate").disabled=false;$("export").disabled=false;
+ setupCanvas();drawFrame(0);$("videoInfo").textContent=img.naturalWidth+" × "+img.naturalHeight+" • "+$("duration").value+" sec";setStatus("Image ready. Animate the preview or export a video.");
+ }catch(e){setStatus("Generation failed: "+e.message+" (Check endpoint, CORS, key, model, and request schema.)");}
+ finally{$("generate").disabled=false;}
+};
+const canvas=$("canvas"),ctx=canvas.getContext("2d");
+function setupCanvas(){const ratio=$("ratio").value.split(":").map(Number);let w=960,h=Math.round(960*ratio[1]/ratio[0]);if(h>960){h=960;w=Math.round(960*ratio[0]/ratio[1]);}canvas.width=w;canvas.height=h;}
+function drawFrame(progress){
+ if(!image)return;const w=canvas.width,h=canvas.height,iw=image.naturalWidth,ih=image.naturalHeight;
+ const cover=Math.max(w/iw,h/ih),baseW=iw*cover,baseH=ih*cover;
+ let scale=1,x=(w-baseW)/2,y=(h-baseH)/2;const p=progress;
+ const mode=$("motion").value;
+ if(mode==="zoom"){scale=1+0.13*p;x=(w-baseW*scale)/2;y=(h-baseH*scale)/2;}
+ else if(mode==="panleft"){scale=1.12;x=(w-baseW*scale)/2-(baseW*scale-w)*p;y=(h-baseH*scale)/2;}
+ else if(mode==="panright"){scale=1.12;x=(w-baseW*scale)/2+(baseW*scale-w)*p;y=(h-baseH*scale)/2;}
+ else if(mode==="drift"){scale=1.1;x=(w-baseW*scale)/2+Math.sin(p*Math.PI*2)*w*.025;y=(h-baseH*scale)/2+Math.cos(p*Math.PI*2)*h*.02;}
+ else if(mode==="pulse"){scale=1.04+0.035*Math.sin(p*Math.PI*4);x=(w-baseW*scale)/2;y=(h-baseH*scale)/2;}
+ ctx.fillStyle="#000";ctx.fillRect(0,0,w,h);ctx.drawImage(image,x,y,baseW*scale,baseH*scale);
+}
+function stopAnimation(){cancelAnimationFrame(raf);raf=0;if(recorder&&recorder.state!=="inactive")recorder.stop();$("stop").disabled=true;}
+function animateLoop(start,duration){const tick=now=>{let p=Math.min(1,(now-start)/duration);drawFrame(p);if(p<1)raf=requestAnimationFrame(tick);else raf=0;};raf=requestAnimationFrame(tick);}
+$("animate").onclick=()=>{if(!image)return;cancelAnimationFrame(raf);$("stop").disabled=false;animateLoop(performance.now(),Number($("duration").value)*1000);setStatus("Animating preview…");};
+$("stop").onclick=()=>{stopAnimation();drawFrame(0);setStatus("Stopped.");};
+$("export").onclick=()=>{
+ if(!image)return;if(!canvas.captureStream||!window.MediaRecorder){setStatus("This browser doesn't support canvas video recording. Try Chrome or Edge.");return;}
+ cancelAnimationFrame(raf);drawFrame(0);chunks=[];stream=canvas.captureStream(30);
+ let mime=MediaRecorder.isTypeSupported("video/webm;codecs=vp9")?"video/webm;codecs=vp9":"video/webm";
+ try{recorder=new MediaRecorder(stream,{mimeType:mime});}catch(e){setStatus("Could not start recorder: "+e.message);return;}
+ recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+ recorder.onstop=()=>{const blob=new Blob(chunks,{type:"video/webm"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="agnes-ai-video.webm";a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);stream.getTracks().forEach(t=>t.stop());setStatus("Video exported!");$("stop").disabled=true;};
+ recorder.start();$("stop").disabled=false;setStatus("Recording video export…");
+ animateLoop(performance.now(),Number($("duration").value)*1000);
+ const wait=Number($("duration").value)*1000+150;setTimeout(()=>{if(recorder&&recorder.state!=="inactive")recorder.stop();cancelAnimationFrame(raf);$("stop").disabled=true;},wait);
+};
+$("ratio").onchange=()=>{if(image){setupCanvas();drawFrame(0);}};
+$("duration").onchange=()=>{if(image)$("videoInfo").textContent=image.naturalWidth+" × "+image.naturalHeight+" • "+$("duration").value+" sec";};
+</script>
+</body>
+</html>
